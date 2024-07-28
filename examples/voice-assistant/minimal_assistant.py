@@ -2,7 +2,7 @@ import asyncio
 
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
 from livekit.agents.voice_assistant import VoiceAssistant
-from livekit.plugins import silero
+from livekit.plugins import silero,openai
 from livekit.plugins.azure import TTS, STT
 from alibabacloud.llm import LLM
 
@@ -10,8 +10,7 @@ async def entrypoint(ctx: JobContext):
     initial_ctx = llm.ChatContext().append(
         role="system",
         text=(
-            "You are a voice assistant created by LiveKit. Your interface with users will be voice. "
-            "You should use short and concise responses, and avoiding usage of unpronouncable punctuation."
+            "你是一个语音助手"
         ),
     )
 
@@ -20,14 +19,14 @@ async def entrypoint(ctx: JobContext):
     assistant = VoiceAssistant(
         vad=silero.VAD.load(),
         stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
-        llm=LLM(),
+        llm=openai.LLM(base_url="http://localhost:3001/v1",model="qwen:7b"),
         tts=TTS(voice="zh-CN-XiaoxiaoNeural"), # Text-to-Speech
         chat_ctx=initial_ctx,
     )
     assistant.start(ctx.room)
 
     await asyncio.sleep(1)
-    await assistant.say("Hey, how can I help you today?", allow_interruptions=True)
+    await assistant.say("你好啊，大帅哥", allow_interruptions=True)
 
 
 if __name__ == "__main__":
