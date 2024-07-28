@@ -19,7 +19,7 @@ async def entrypoint(ctx: JobContext):
     assistant = VoiceAssistant(
         vad=silero.VAD.load(),
         stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
-        llm=openai.LLM(base_url="http://localhost:3001/v1",model="qwen:7b"),
+        llm=openai.LLM(base_url="http://localhost:3001/v1",model="qwen2:7b"),
         tts=TTS(voice="zh-CN-XiaoxiaoNeural"), # Text-to-Speech
         chat_ctx=initial_ctx,
     )
