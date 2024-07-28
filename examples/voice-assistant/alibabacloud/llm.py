@@ -37,7 +37,7 @@ class LLM(llm.LLM):
                 self._opts = LLMOptions(model=model,base_url="xxxx",api_key=dashscope_api_key)
         else: 
             self._opts = LLMOptions(model=model,base_url=base_url,api_key=api_key)
-        self._running_fncs: MutableSet[asyncio.Task] = set()
+        self._running_fncs: MutableSet[asyncio.Task[Any]] = set()
     async def fetch_stream(self, url, headers, data):
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, data=json.dumps(data), timeout=60000) as resp:
@@ -51,10 +51,12 @@ class LLM(llm.LLM):
                             yield line.encode('utf-8')
     async def chat(
         self,
-        history: llm.ChatContext,
+        *,
+        chat_ctx: llm.ChatContext,
         fnc_ctx: llm.FunctionContext | None = None,
         temperature: float | None = None,
-        n: int | None = None,
+        n: int | None = 1,
+        parallel_tool_calls: bool | None = None,
     ) -> "LLMStream":
         llm_config = self._opts
         url = llm_config.base_url
@@ -66,31 +68,41 @@ class LLM(llm.LLM):
 
         req_data = {
             "model": "qwen-plus",
-            "input":{"messages": to_openai_ctx(history)},
+            "input":{"messages": to_openai_ctx(chat_ctx)},
             "stream": True,
             "parameters":{"incremental_output": True},
         }
-        # Add logging statement
+        # Add logging statement   
         try:
             logging.info(f"Program reached this point:{req_data}")
             async_gen =  self.fetch_stream(url, headers, req_data)
-            return LLMStream(async_gen, fnc_ctx)
+            #return LLMStream(async_gen, fnc_ctx)
+            return LLMStream(oai_stream=async_gen, chat_ctx=chat_ctx, fnc_ctx=fnc_ctx)
         except Exception as e:
             logging.error(f"An error occurred during chat: {e}")
             raise
 
 class LLMStream(llm.LLMStream):
     def __init__(
-        self, oai_stream, fnc_ctx: llm.FunctionContext | None
+        self, 
+        *,
+        oai_stream,
+        chat_ctx: llm.ChatContext,
+        fnc_ctx: llm.FunctionContext | None
     ) -> None:
-        super().__init__()
+        super().__init__(chat_ctx=chat_ctx, fnc_ctx=fnc_ctx)
         self._oai_stream = oai_stream
         self._fnc_ctx = fnc_ctx
-        self._running_fncs: MutableSet[asyncio.Task] = set()
+       # self._running_fncs: MutableSet[asyncio.Task] = set()
 
-    def __aiter__(self) -> "LLMStream":
-        return self
+    # def __aiter__(self) -> "LLMStream":
+    #     return self
+    
+    async def aclose(self) -> None:
+        if self._oai_stream:
+            await self._oai_stream.close()
 
+        return await super().aclose()
  
     async def __anext__(self) -> llm.ChatChunk:
         answer = ""
@@ -133,19 +145,14 @@ class LLMStream(llm.LLMStream):
                 raise StopAsyncIteration
         raise StopAsyncIteration
 
-    async def aclose(self, wait: bool = True) -> None:
-        if not wait:
-            for task in self._running_fncs:
-                task.cancel()
 
-        await asyncio.gather(*self._running_fncs, return_exceptions=True)
 
 
 def to_openai_ctx(chat_ctx: llm.ChatContext) -> list:
     return [
         {
-            "role": msg.role.value,
-            "content": msg.text,
+            "role": msg.role,
+            "content": msg.content,
         }
         for msg in chat_ctx.messages
     ]
