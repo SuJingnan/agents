@@ -48,7 +48,7 @@ async def entrypoint(ctx: JobContext):
         # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="gemma2:27b"),
         # llm=openai.LLM.with_azure(model="gpt-4o-mini", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="livekit-test", api_version="2024-02-15-preview", api_key=""),
         # llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview", api_key=""),
-        llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://sunny-aoai.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview"),
+        llm=openai.LLM.with_azure(model="gpt-4o", azure_deployment="gpt-4o"),
        
         tts=TTS(voice="zh-CN-XiaoxiaoNeural"), # Text-to-Speech
         chat_ctx=initial_ctx,

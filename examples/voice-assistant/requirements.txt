@@ -4,3 +4,5 @@ livekit-plugins-deepgram>=0.6.6
 livekit-plugins-silero>=0.6.4
 python-dotenv~=1.0
 aiofile~=3.8.8
+requests~=2.32.3
+livekit-plugins-azure~=0.3.1
