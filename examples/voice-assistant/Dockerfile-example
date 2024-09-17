@@ -1,6 +1,6 @@
 # This is an example Dockerfile that builds a minimal container for running LK Agents
 # syntax=docker/dockerfile:1
-ARG PYTHON_VERSION=3.11.6
+ARG PYTHON_VERSION=3.11.10
 FROM python:${PYTHON_VERSION}-slim
 
 # Prevents Python from writing pyc files.
@@ -42,8 +42,8 @@ RUN python -m pip install --user --no-cache-dir -r requirements.txt
 COPY . .
 
 # ensure that any dependent models are downloaded at build-time
-RUN python myagent.py download-files
+RUN python minimal_assistant.py download-files
 
 # Run the application.
-ENTRYPOINT ["python", "myagent.py"]
+ENTRYPOINT ["python", "minimal_assistant.py"]
 CMD ["start"]
