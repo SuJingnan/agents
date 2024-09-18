@@ -21,8 +21,8 @@ from livekit.agents import stt, utils
 
 import azure.cognitiveservices.speech as speechsdk  # type: ignore
 
-from .log import logger
-
+# from .log import logger
+from log import logger  # 修改导入路径
 
 @dataclass
 class STTOptions:

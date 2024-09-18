@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re  # 导入 re 模块
 from dataclasses import dataclass
 
 from livekit import rtc
@@ -76,7 +77,9 @@ class TTS(tts.TTS):
 class ChunkedStream(tts.ChunkedStream):
     def __init__(self, text: str, opts: _TTSOptions) -> None:
         super().__init__()
-        self._text, self._opts = text, opts
+        self._text = remove_html_tags(text)  # 过滤 HTML 标签
+        self._opts = opts
+        # self._text, self._opts = text, opts
 
     @utils.log_exceptions()
     async def _main_task(self):
@@ -147,3 +150,35 @@ def _create_speech_synthesizer(
     return speechsdk.SpeechSynthesizer(
         speech_config=speech_config, audio_config=stream_config
     )
+def remove_html_tags(text: str) -> str:
+    """Remove HTML and CSS tags from a string, keeping only the text."""
+    
+    # Remove CSS code, including comments within <style> tags
+    clean_css = re.compile(r'<style[^>]*>.*?</style>', re.DOTALL)
+    text = re.sub(clean_css, '', text)
+    
+    # Remove HTML tags
+    clean_html = re.compile(r'<[^>]+>')
+    text = re.sub(clean_html, '', text)
+    
+        # Remove Markdown tags
+    clean_markdown = re.compile(r'(\*\*|__|`|~~|#|\*|_)')
+    text = re.sub(clean_markdown, '', text)
+
+    return text
+
+    # # Remove HTML tags
+    # clean_html = re.compile('<.*?>')
+    # text = re.sub(clean_html, '', text)
+    
+    # # Remove CSS code
+    # clean_css = re.compile(r'<style.*?>.*?</style>', re.DOTALL)
+    # text = re.sub(clean_css, '', text)
+
+
+        # 移除所有HTML标签
+    # cleaned_content = re.sub(r'<[^>]+>', '', text)
+    # # 移除CSS代码，假定CSS在<style>标签中
+    # cleaned_content = re.sub(r'<style[^>]*>.*?</style>', '', cleaned_content, flags=re.DOTALL)
+    # return cleaned_content
+ 
