@@ -34,14 +34,22 @@ async def entrypoint(ctx: JobContext):
     caseid= str(list(ctx.room.remote_participants.values())[0].metadata)
 
     logger.info("caseid: " + caseid)
-    robot_case = get_case_by_id(caseid)
-    initial_ctx = llm.ChatContext().append(
-        role="system",
-        text=(
-            robot_case["data"]["attributes"]["Prompt"]
-        ),
-    )
 
+    if(caseid):
+        robot_case = get_case_by_id(caseid)
+        initial_ctx = llm.ChatContext().append(
+            role="system",
+            text=(
+                robot_case["data"]["attributes"]["Prompt"]
+            ),
+        )
+    else:
+        initial_ctx = llm.ChatContext().append(
+            role="system",
+            text=(
+                "你是一个助手"
+            ),
+        )
     assistant = VoiceAssistant(
         vad=silero.VAD.load(),
         stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
@@ -71,10 +79,12 @@ async def entrypoint(ctx: JobContext):
         if msg.message:
             asyncio.create_task(answer_from_text(msg.message))
 
-
-    welcomeMessage= robot_case["data"]["attributes"]["welcomeMessage"]
-    if welcomeMessage:
-        await assistant.say(welcomeMessage, allow_interruptions=True)
+    if(caseid):
+        welcomeMessage= robot_case["data"]["attributes"]["welcomeMessage"]
+        if welcomeMessage:
+            await assistant.say(welcomeMessage, allow_interruptions=True)
+    else:
+        await assistant.say("系统没有获取到Case，请设置case后再重新链接", allow_interruptions=True)
      
 
 
