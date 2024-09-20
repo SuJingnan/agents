@@ -1,13 +1,13 @@
-import sys
-import os
+# import sys
+# import os
 
-# 获取当前脚本所在目录的父目录
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '../..'))
-livekit_plugins_path = os.path.join(project_root, 'livekit-plugins/livekit-plugins-azure/livekit/plugins/azure')
+# # 获取当前脚本所在目录的父目录
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# project_root = os.path.abspath(os.path.join(current_dir, '../..'))
+# livekit_plugins_path = os.path.join(project_root, 'livekit-plugins/livekit-plugins-azure/livekit/plugins/azure')
 
-# 将 livekit-plugins-azure 目录添加到 sys.path
-sys.path.insert(0, livekit_plugins_path)
+# # 将 livekit-plugins-azure 目录添加到 sys.path
+# sys.path.insert(0, livekit_plugins_path)
 
 import asyncio
 import requests
@@ -15,12 +15,16 @@ import logging
 from dotenv import load_dotenv
 from livekit import rtc
 from livekit.agents import AutoSubscribe, JobContext, WorkerOptions, cli, llm
-from livekit.agents.voice_assistant import VoiceAssistant
+from livekit.agents.voice_assistant import VoiceAssistant,AssistantTranscriptionOptions
 from livekit.plugins import openai, silero
-from tts import TTS  # 修改导入路径
-from stt import STT  # 修改导入路径2
-# from ..livekit-plugins.livekit.plugins.azure import TTS, STT
-# from ..livekit-plugins.livekit.plugins.azure import TTS, STT
+# from tts import TTS  # 修改导入路径
+# from stt import STT  # 修改导入路径2
+from azure2 import TTS, STT
+
+# from livekit.plugins.azure import TTS  # 修改导入路径
+# from livekit.plugins.azure import STT  # 修改导入路径
+# from ...livekit.plugins.livekit.plugins.azure import TTS, STT
+# from ...livekit.plugins.livekit.plugins.azure import TTS, STT
 load_dotenv()
 logger = logging.getLogger("my-worker")
 logger.setLevel(logging.INFO)
@@ -64,17 +68,22 @@ async def entrypoint(ctx: JobContext):
                 "你是一个助手"
             ),
         )
+    assistantTranscriptionOptions = AssistantTranscriptionOptions(
+           agent_transcription_speed=50.0,
+        )
     assistant = VoiceAssistant(
         vad=silero.VAD.load(),
         stt=STT(languages=["zh-CN"]), # Speech-to-Text
         # stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
-        # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="gemma2:27b"),
+        # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="qwen2:7b"),
         # llm=openai.LLM.with_azure(model="gpt-4o-mini", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="livekit-test", api_version="2024-02-15-preview", api_key=""),
         # llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview", api_key=""),
         llm=openai.LLM.with_azure(model="gpt-4o", azure_deployment="gpt-4o"),
        
         tts=TTS(voice="zh-CN-XiaoxiaoNeural"), # Text-to-Speech
         chat_ctx=initial_ctx,
+        transcription=assistantTranscriptionOptions
+       
     )
     assistant.start(ctx.room)
 
@@ -94,7 +103,7 @@ async def entrypoint(ctx: JobContext):
         if msg.message:
             asyncio.create_task(answer_from_text(msg.message))
 
-    await assistant.say("服务链接成功", allow_interruptions=True,add_to_chat_ctx=False)
+    await assistant.say("AI Coath Connected", allow_interruptions=True,add_to_chat_ctx=False)
     if(caseid):
         welcomeMessage= robot_case["data"]["attributes"]["welcomeMessage"]
         if welcomeMessage:
