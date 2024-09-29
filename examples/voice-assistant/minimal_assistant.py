@@ -48,11 +48,11 @@ async def entrypoint(ctx: JobContext):
 
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
     logger.info("starting entrypoint")
-
     caseid= str(list(ctx.room.remote_participants.values())[0].metadata)
-
     logger.info("caseid: " + caseid)
-
+    assistantTranscriptionOptions = AssistantTranscriptionOptions(
+           agent_transcription_speed=50.0,
+        )
     if(caseid):
         robot_case = get_case_by_id(caseid)
         initial_ctx = llm.ChatContext().append(
@@ -61,6 +61,18 @@ async def entrypoint(ctx: JobContext):
                 robot_case["data"]["attributes"]["Prompt"]
             ),
         )
+        assistant = VoiceAssistant(
+        vad=silero.VAD.load(),
+        stt=STT(languages=[robot_case["data"]["attributes"]["STTLang"]]), # Speech-to-Text
+        # stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
+        # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="qwen2:7b"),
+        # llm=openai.LLM.with_azure(model="gpt-4o-mini", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="livekit-test", api_version="2024-02-15-preview", api_key=""),
+        # llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview", api_key=""),
+        llm=openai.LLM.with_azure(model="gpt-4o", azure_deployment="gpt-4o"),
+        tts=TTS(voice=robot_case["data"]["attributes"]["TTSVoice"]), # Text-to-Speech en-US-AndrewMultilingualNeural  zh-CN-XiaohanNeural
+        chat_ctx=initial_ctx,
+        transcription=assistantTranscriptionOptions
+    )
     else:
         initial_ctx = llm.ChatContext().append(
             role="system",
@@ -68,10 +80,7 @@ async def entrypoint(ctx: JobContext):
                 "你是一个助手"
             ),
         )
-    assistantTranscriptionOptions = AssistantTranscriptionOptions(
-           agent_transcription_speed=50.0,
-        )
-    assistant = VoiceAssistant(
+        assistant = VoiceAssistant(
         vad=silero.VAD.load(),
         stt=STT(languages=["zh-CN"]), # Speech-to-Text
         # stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
@@ -79,12 +88,13 @@ async def entrypoint(ctx: JobContext):
         # llm=openai.LLM.with_azure(model="gpt-4o-mini", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="livekit-test", api_version="2024-02-15-preview", api_key=""),
         # llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview", api_key=""),
         llm=openai.LLM.with_azure(model="gpt-4o", azure_deployment="gpt-4o"),
-       
-        tts=TTS(voice="zh-CN-XiaoxiaoNeural"), # Text-to-Speech
+        tts=TTS(voice="zh-CN-XiaohanNeural"), # Text-to-Speech en-US-AndrewMultilingualNeural  zh-CN-XiaohanNeural
         chat_ctx=initial_ctx,
         transcription=assistantTranscriptionOptions
-       
     )
+    
+
+
     assistant.start(ctx.room)
 
     # listen to incoming chat messages, only required if you'd like the agent to
@@ -103,7 +113,7 @@ async def entrypoint(ctx: JobContext):
         if msg.message:
             asyncio.create_task(answer_from_text(msg.message))
 
-    await assistant.say("AI Coath Connected", allow_interruptions=True,add_to_chat_ctx=False)
+    # await assistant.say("AI Coath Connected", allow_interruptions=True,add_to_chat_ctx=False)
     if(caseid):
         welcomeMessage= robot_case["data"]["attributes"]["welcomeMessage"]
         if welcomeMessage:
