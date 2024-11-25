@@ -36,6 +36,6 @@ export OPENAI_API_KEY=<your OpenAI API key>
 
 `python minimal_assistant.py dev`
 
-### Test with a LiveKit frontend:
+### Test with a LiveKit frontend:ws
 
 We've built [Agents Playground](https://agents-playground.livekit.io) so you don't have to build your own frontend while you iterate on your agent.

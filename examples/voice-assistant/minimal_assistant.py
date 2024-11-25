@@ -30,7 +30,7 @@ logger = logging.getLogger("my-worker")
 logger.setLevel(logging.INFO)
 # def get_case_by_id(caseid):
     
-    # return "你是一个智能客服的教练，你正在测验客服的技能水平，你现在假设是一个奔驰车主，目前的问题是汽车无法启动了，请你打电给给客服寻求帮助，你通过这个求助电话过程中测试一下客服的服务水平，结束测验后，并给出评分。你每次回复或者提问字数尽量控制在20字以内。"
+    # return "你是w一个智能客服的教练，你正在测验客服的技能水平，你现在假设是一个奔驰车主，目前的问题是汽车无法启动了，请你打电给给客服寻求帮助，你通过这个求助电话过程中测试一下客服的服务水平，结束测验后，并给出评分。你每次回复或者提问字数尽量控制在20字以内。"
 def get_case_by_id(caseid):
     url = "https://strapi.shougan.net/api/robot-prompts/" + caseid + "?populate=robot_language,robot_type,llm,welcomeMessage"
     response = requests.get(url)
@@ -65,7 +65,7 @@ async def entrypoint(ctx: JobContext):
         vad=silero.VAD.load(),
         stt=STT(languages=[robot_case["data"]["attributes"]["STTLang"]]), # Speech-to-Text
         # stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
-        # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="qwen2:7b"),
+        # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="llama3.1:70b"),
         # llm=openai.LLM.with_azure(model="gpt-4o-mini", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="livekit-test", api_version="2024-02-15-preview", api_key=""),
         # llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview", api_key=""),
         llm=openai.LLM.with_azure(model="gpt-4o", azure_deployment="gpt-4o"),
