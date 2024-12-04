@@ -1,5 +1,13 @@
 # livekit-agents
 
+## 0.8.11
+
+### Patch Changes
+
+- voiceassistant: add VoiceAssistantState - [`c9aaecb60adedae53a32bf1d39f23413b832a2ba`](https://github.com/livekit/agents/commit/c9aaecb60adedae53a32bf1d39f23413b832a2ba) ([@lukasIO](https://github.com/lukasIO))
+
+- fix non pickleable log - [`024b502b0dc8291a2ae26df566aa4f5da27991fc`](https://github.com/livekit/agents/commit/024b502b0dc8291a2ae26df566aa4f5da27991fc) ([@theomonnom](https://github.com/theomonnom))
+
 ## 0.8.10
 
 ### Patch Changes
