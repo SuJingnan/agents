@@ -32,7 +32,7 @@ logger.setLevel(logging.INFO)
     
     # return "你是w一个智能客服的教练，你正在测验客服的技能水平，你现在假设是一个奔驰车主，目前的问题是汽车无法启动了，请你打电给给客服寻求帮助，你通过这个求助电话过程中测试一下客服的服务水平，结束测验后，并给出评分。你每次回复或者提问字数尽量控制在20字以内。"
 def get_case_by_id(caseid):
-    url = "https://strapi.shougan.net/api/robot-prompts/" + caseid + "?populate=robot_language,robot_type,llm,welcomeMessage"
+    url = "http://localhost:1337/api/robot-prompts/" + caseid + "?populate=robot_language,robot_type,llm,welcomeMessage"
     response = requests.get(url)
     if response.status_code == 200:
             return response.json()
@@ -66,6 +66,7 @@ async def entrypoint(ctx: JobContext):
         stt=STT(languages=[robot_case["data"]["attributes"]["STTLang"]]), # Speech-to-Text
         # stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
         # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="llama3.1:70b"),
+        # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="gemma2:27b"),
         # llm=openai.LLM.with_azure(model="gpt-4o-mini", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="livekit-test", api_version="2024-02-15-preview", api_key=""),
         # llm=openai.LLM.with_azure(model="gpt-4o", azure_endpoint="https://livekit.openai.azure.com/", azure_deployment="gpt-4o", api_version="2024-02-15-preview", api_key=""),
         llm=openai.LLM.with_azure(model="gpt-4o", azure_deployment="gpt-4o"),
@@ -81,7 +82,7 @@ async def entrypoint(ctx: JobContext):
             ),
         )
         assistant = VoiceAssistant(
-        vad=silero.VAD.load(),
+        vad=silero.VAD.load(activation_threshold=0.1,min_silence_duration=0.1),
         stt=STT(languages=["zh-CN"]), # Speech-to-Text
         # stt=STT(languages=["zh-CN","en-US"]), # Speech-to-Text
         # llm=openai.LLM.with_ollama(base_url="http://localhost:11434/v1", model="qwen2:7b"),
